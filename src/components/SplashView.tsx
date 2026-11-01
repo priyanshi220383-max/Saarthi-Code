@@ -1,84 +1,205 @@
-import React from 'react';
-import { motion } from 'motion/react';
+import React, { useState, useEffect, memo } from 'react';
+import { motion, AnimatePresence } from 'motion/react';
+import './SplashView.css';
+
+/* ========================================
+   SLIDESHOW SETTINGS
+======================================== */
+
+// How long each slide stays visible (5 seconds)
+const SLIDE_DURATION_MS = 3000;
+
+// The 5 slides, in display order. Chand Baori is first.
+// Each slide has its own photo AND its own text.
+// To change a photo: replace the text inside the quotes after "src:".
+const SLIDES = [
+  {
+    src: 'https://images.unsplash.com/photo-1599661046289-e31897846e41?auto=format&fit=crop&w=1200&q=80', // <-- PASTE CHAND BAORI URL HERE if this one doesn't load
+    alt: 'Chand Baori Stepwell, Abhaneri',
+    title: 'Chand Baori: The Labyrinth of Rajasthan',
+    meta: '3,500 Steps • 13 Subterranean Tiers • Verified Oral Historians',
+  },
+  {
+    src: 'https://i.pinimg.com/736x/84/90/d5/8490d5fec8197c186c19d1af4de3b8a6.jpg',
+    alt: 'Hawa Mahal, Jaipur',
+    title: 'Hawa Mahal: The Palace of Winds',
+    meta: '953 Windows • 5 Storeys • Built in 1799',
+  },
+  {
+    src: 'https://i.pinimg.com/736x/8a/22/0b/8a220b63c3d4e8cf9af9b80c9b9f5f44.jpg',
+    alt: 'Amer Fort, Jaipur',
+    title: 'Amer Fort: The Hilltop Citadel of Jaipur',
+    meta: 'Since 1592 • Sheesh Mahal • Verified Oral Historians',
+  },
+  {
+    src: 'https://i.pinimg.com/736x/31/7f/ed/317fede02c5cc44c57c47bb6586ca4ad.jpg',
+    alt: 'Jaisalmer Fort, Jaisalmer',
+    title: 'Jaisalmer Fort: The Living Golden Citadel',
+    meta: 'Built in 1156 • Yellow Sandstone • Still Inhabited',
+  },
+  {
+    src: 'https://i.pinimg.com/736x/29/1a/39/291a39bf3df87542cd4fa8f723f1803f.jpg',
+    alt: 'Lake Pichola, Udaipur',
+    title: 'Lake Pichola: The Mirror of Udaipur',
+    meta: 'Created in 1362 • City Palace • Lake Palace',
+  },
+];
+
+/* ========================================
+   SLIDESHOW COMPONENT
+   (photos + dark overlay + text)
+======================================== */
+
+// Kept as its own small component so that the timer's state change
+// re-renders ONLY the slideshow, not the whole login page.
+const HeroSlideshow: React.FC = memo(() => {
+  // Index of the slide currently shown (0 = Chand Baori)
+  const [activeIndex, setActiveIndex] = useState(0);
+
+  useEffect(() => {
+    // Every 10 seconds, move to the next slide.
+    // The % operator loops back to 0 after the 5th slide.
+    const timerId = setInterval(() => {
+      setActiveIndex((current) => (current + 1) % SLIDES.length);
+    }, SLIDE_DURATION_MS);
+
+    // Cleanup: stop the timer when the component unmounts (no memory leaks)
+    return () => clearInterval(timerId);
+  }, []);
+
+  const activeSlide = SLIDES[activeIndex];
+
+  return (
+    <>
+      {/* All photos are stacked; only the active one is visible */}
+      {SLIDES.map((slide, index) => (
+        <img
+          key={slide.alt}
+          src={slide.src}
+          alt={slide.alt}
+          aria-hidden={index !== activeIndex}
+          decoding="async"
+          // If a photo fails to load, hide it (no ugly broken-image icon)
+          onError={(e) => {
+            e.currentTarget.style.display = 'none';
+          }}
+          className={`splash-hero-image ${
+            index === activeIndex ? 'splash-hero-image--active' : ''
+          }`}
+        />
+      ))}
+
+      {/* Dark gradient overlay (unchanged) */}
+      <div className="splash-image-overlay"></div>
+
+      {/* Text: fades out, then the next slide's text fades in */}
+      <AnimatePresence mode="wait">
+        <motion.div
+          key={activeIndex}
+          className="splash-feature-content"
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -8 }}
+          transition={{ duration: 0.6, ease: 'easeInOut' }}
+        >
+          <span className="splash-feature-label">
+            Featured Journey
+          </span>
+
+          <h2 className="splash-feature-title">
+            {activeSlide.title}
+          </h2>
+
+          <p className="splash-feature-meta">
+            {activeSlide.meta}
+          </p>
+        </motion.div>
+      </AnimatePresence>
+    </>
+  );
+});
+
+/* ========================================
+   SPLASH VIEW (your existing login page)
+======================================== */
 
 interface SplashViewProps {
   onContinue: (authMode: 'google' | 'phone' | 'guest') => void;
   onExploreDirectly: () => void;
 }
 
-export const SplashView: React.FC<SplashViewProps> = ({ onContinue, onExploreDirectly }) => {
+export const SplashView: React.FC<SplashViewProps> = ({
+  onContinue,
+  onExploreDirectly,
+}) => {
+  const hashtags = ['Awed', 'Spooked', 'Enlightened', 'Adventurous'];
+
   return (
-    <div className="relative min-h-screen w-full flex items-center justify-center p-4 sm:p-6 lg:p-10 bg-[#FDFCF8] text-[#1C1C1E]">
-      {/* Top Left Corner Nav Badge */}
-      <div className="absolute top-6 left-6 sm:top-10 sm:left-10 z-20">
-        <div className="font-mono text-[10px] sm:text-[11px] uppercase tracking-[0.15em] px-3.5 py-1.5 bg-[#FDFCF8] border border-[rgba(28,28,30,0.12)] rounded text-[#B39029] font-medium flex items-center gap-1.5 shadow-xs">
-          <span className="w-1.5 h-1.5 rounded-full bg-[#B39029] animate-pulse"></span>
+    <div className="splash-page">
+
+      {/* Top Left Corner Badge */}
+      <div className="splash-badge-position">
+        <div className="splash-badge">
+          <span className="splash-badge-dot"></span>
           <span>Safe Solo Mode [01]</span>
         </div>
       </div>
 
-      {/* Main Split Container */}
+      {/* Main Container */}
       <motion.div
         initial={{ opacity: 0, scale: 0.98, y: 15 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
-        transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
-        className="w-full max-w-[1200px] min-h-[640px] sm:min-h-[720px] lg:h-[800px] grid grid-cols-1 lg:grid-cols-2 border border-[rgba(28,28,30,0.08)] bg-white shadow-[0_40px_100px_rgba(0,0,0,0.05)] rounded-2xl sm:rounded-none overflow-hidden relative"
+        transition={{
+          duration: 0.7,
+          ease: [0.16, 1, 0.3, 1],
+        }}
+        className="splash-container"
       >
-        {/* Left Side: Visual Story Showcase */}
-        <div className="relative bg-[#111111] overflow-hidden border-b lg:border-b-0 lg:border-r border-[rgba(28,28,30,0.08)] min-h-[340px] sm:min-h-[420px] lg:min-h-full group">
-          <img
-            src="https://images.unsplash.com/photo-1599661046289-e31897846e41?auto=format&fit=crop&w=1200&q=80"
-            alt="Chand Baori Stepwell & Heritage"
-            className="w-full h-full object-cover opacity-75 scale-100 group-hover:scale-105 transition-transform duration-1000 ease-out"
-          />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/30 to-transparent" />
-          
-          <div className="absolute bottom-6 left-6 right-6 sm:bottom-10 sm:left-10 sm:right-10 text-white z-10">
-            <span className="font-mono text-[10px] uppercase tracking-[0.15em] px-3 py-1 bg-transparent border border-white/30 text-white rounded mb-3 inline-block font-medium backdrop-blur-xs">
-              Featured Journey
-            </span>
-            <h2 className="font-serif text-3xl sm:text-4xl lg:text-[2.5rem] font-medium leading-[1.15] text-white tracking-normal">
-              Chand Baori: The Labyrinth of Rajasthan
-            </h2>
-            <p className="font-mono text-[10px] text-white/70 tracking-widest mt-2 uppercase">
-              3,500 Steps • 13 Subterranean Tiers • Verified Oral Historians
-            </p>
-          </div>
+
+        {/* Left Side: Visual Showcase (slideshow with photos + text) */}
+        <div className="splash-visual">
+          <HeroSlideshow />
         </div>
 
-        {/* Right Side: UI & Authentication */}
-        <div className="p-8 sm:p-12 lg:p-16 xl:p-20 flex flex-col justify-center relative bg-white">
-          <div className="max-w-[420px] mx-auto w-full">
-            <h1 className="font-serif text-5xl sm:text-6xl font-semibold tracking-tight text-[#1C1C1E] leading-none mb-2">
+        {/* Right Side: Authentication */}
+        <div className="splash-auth-panel">
+          <div className="splash-auth-content">
+
+            <h1 className="splash-logo">
               SAARTHI
             </h1>
-            <p className="font-serif italic text-2xl sm:text-2xl text-[#B39029] mb-6">
+
+            <p className="splash-tagline">
               Guided by Stories
             </p>
-            <p className="text-[15px] sm:text-base leading-relaxed text-[rgba(28,28,30,0.6)] mb-7 font-normal">
-              Experience the living folklore, subterranean mysteries, and verified oral historians of India's vast cultural heritage.
+
+            <p className="splash-description">
+              Experience the living folklore, subterranean mysteries,
+              and verified oral historians of India's vast cultural heritage.
             </p>
 
-            {/* Social / Emotion Hashtags */}
-            <div className="flex flex-wrap gap-3 sm:gap-4 mb-8">
-              {['Awed', 'Spooked', 'Enlightened', 'Adventurous'].map((tag) => (
-                <span
-                  key={tag}
-                  className="text-xs sm:text-sm text-[rgba(28,28,30,0.6)] underline underline-offset-4 hover:text-[#B39029] transition cursor-pointer"
-                >
+            {/* Hashtags */}
+            <div className="splash-hashtags">
+              {hashtags.map((tag) => (
+                <span key={tag} className="splash-hashtag">
                   #{tag}
                 </span>
               ))}
             </div>
 
-            {/* Action Group */}
-            <div className="flex flex-col gap-3.5">
+            {/* Authentication Buttons */}
+            <div className="splash-actions">
+
               <button
                 id="btn-google-login"
                 onClick={() => onContinue('google')}
-                className="h-14 sm:h-15 rounded-md border border-[rgba(28,28,30,0.12)] bg-transparent text-[#1C1C1E] flex items-center justify-center gap-3.5 font-medium text-sm hover:bg-[#faf8f2] hover:border-[rgba(28,28,30,0.25)] transition duration-200 cursor-pointer shadow-2xs active:scale-[0.99]"
+                className="splash-button splash-google-button"
               >
-                <svg className="w-4.5 h-4.5" viewBox="0 0 24 24">
+                <svg
+                  className="splash-google-icon"
+                  viewBox="0 0 24 24"
+                  aria-hidden="true"
+                >
                   <path
                     d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
                     fill="#4285F4"
@@ -96,34 +217,43 @@ export const SplashView: React.FC<SplashViewProps> = ({ onContinue, onExploreDir
                     fill="#EA4335"
                   />
                 </svg>
+
                 <span>Sign in with Google</span>
               </button>
 
               <button
                 id="btn-phone-login"
                 onClick={() => onContinue('phone')}
-                className="h-14 sm:h-15 rounded-md bg-[#1C1C1E] text-white flex items-center justify-center gap-3 font-semibold text-sm hover:bg-black transition duration-200 cursor-pointer shadow-sm active:scale-[0.99]"
+                className="splash-button splash-phone-button"
               >
-                <span className="material-symbols-outlined text-[20px]">phone_iphone</span>
+                <span className="material-symbols-outlined splash-phone-icon">
+                  phone_iphone
+                </span>
                 <span>Use Mobile Number</span>
               </button>
 
               <button
                 id="btn-guest-explore"
                 onClick={onExploreDirectly}
-                className="self-center font-mono text-[11px] uppercase tracking-[0.12em] text-[#B39029] hover:text-[#8f711c] transition mt-2 flex items-center gap-1.5 cursor-pointer py-1"
+                className="splash-guest-button"
               >
                 <span>Explore as Guest</span>
-                <span className="material-symbols-outlined text-[14px]">arrow_forward</span>
+                <span className="material-symbols-outlined splash-arrow-icon">
+                  arrow_forward
+                </span>
               </button>
+
             </div>
 
-            {/* Bottom Security Note */}
-            <p className="mt-8 text-center text-[11px] leading-relaxed text-[rgba(28,28,30,0.5)] font-light">
-              By continuing, you agree to Saarthi’s Cultural Heritage Code & Verified Safety Terms.
+            {/* Security Note */}
+            <p className="splash-security-note">
+              By continuing, you agree to Saarthi’s Cultural Heritage Code
+              &amp; Verified Safety Terms.
             </p>
+
           </div>
         </div>
+
       </motion.div>
     </div>
   );

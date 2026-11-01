@@ -1,18 +1,49 @@
+
 @import "tailwindcss";
 
 @layer base {
+  :root {
+    --color-background: #F7F3EA;
+    --color-surface: #FFFEFA;
+    --color-primary: #123C36;
+    --color-primary-hover: #0B2E29;
+    --color-accent: #B08D43;
+    --color-text: #252823;
+    --color-muted: #6E7068;
+    --color-border: #E8E0D0;
+    --color-highlight: #EAEFE9;
+  }
+
   html {
     scroll-behavior: smooth;
-    font-family: 'Plus Jakarta Sans', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+    font-family: 'Plus Jakarta Sans', system-ui, -apple-system,
+      BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background-color: var(--color-background);
   }
 
   body {
     margin: 0;
     padding: 0;
-    background-color: #FDFCF8;
-    color: #1C1C1E;
+    background-color: var(--color-background);
+    color: var(--color-text);
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+  }
+
+  button,
+  input,
+  textarea,
+  select {
+    font: inherit;
+  }
+
+  button {
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  ::selection {
+    background-color: #D9C69D;
+    color: #252823;
   }
 }
 
@@ -27,10 +58,10 @@
 }
 
 ::-webkit-scrollbar-thumb {
-  background: rgba(28, 28, 30, 0.15);
+  background: #C7BDAA;
   border-radius: 9999px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(28, 28, 30, 0.25);
+  background: #A89A82;
 }
